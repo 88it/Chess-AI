@@ -37,8 +37,8 @@ class Board():
     def display(self):
         """Displays the game board in the terminal"""
 
-    def setup(self, fen: str, accessin) -> None:
-        """Creates game board from a fen string"""
+    def setup(self, fen: str, pawn, rook, knight, bishop, queen, king) -> None:
+        """Creates game board contaning piece objects from a fen notation string template"""
 
 
 if __name__ == "__main__":
