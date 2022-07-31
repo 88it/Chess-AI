@@ -2,6 +2,7 @@
 Holds all classes for chess pieces
 """
 
+import re
 from colorama import init
 init()
 
@@ -30,43 +31,27 @@ class Board():
         self.white_score = white_score
         self.black_score = black_score
         self.board = [None] * 64
-        self.captured = []
-        self.default_fen = default_fen
+        self.white_captured = []
+        self.black_captured = []
         self.white_kingside = True
         self.white_queenside = True
         self.black_kingside = True
         self.black_queenside = True
         self.en_passant_targets = []
+        self.start_time = None
+        self.finish_time = None
+        self.move_history = [1, 2, 3, 4, 5, 6, 7]
+        self.default_fen = default_fen
         # self.default_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
+
+    def play(self) -> None:
+        """Gets starting conditions from user and starts the game"""
 
     def move(self):
         """Takes input from user and calls the corresponding methods in piece classes"""
 
     def update(self):
         """Updates the game board with the result of the piece methods"""
-
-    def display(self):
-        """Displays the game board in the terminal"""
-        print("\x1b[1;33;49m=======================")
-        print("    a b c d e f g h    ")
-        print()
-        for i in range(8):
-            row = [str(8 - i), "   "]
-            for square in self.board[i*8:i*8+8]:
-                if square:
-                    if square.colour:
-                        row.append("\x1b[1;34;49m" + str(square) + "\x1b[33;49m")
-                    else:
-                        row.append("\x1b[1;31;49m" + str(square) + "\x1b[33;49m")
-                    row.append(' ')
-                else:
-                    row.append("x ")
-            row.append("  ")
-            row.append(str(8 - i))
-            print(''.join(row))
-        print()
-        print("    a b c d e f g h    ")
-        print("=======================\x1b[0m")
 
     def setup(self, fen: str=None) -> None:
         """Creates game board contaning piece objects from a fen notation string template
@@ -93,6 +78,7 @@ class Board():
                 else:
                     square_id += square
 
+        # TODO add comments here
         self.white_turn = "w" == fen[1]
 
         self.white_kingside = "K" in fen[2]
@@ -107,6 +93,56 @@ class Board():
 
         self.moves_made = fen[5]
 
+    def display(self):
+        """Displays the game board in the terminal
+        This is extremely messy but it does work..."""
+
+        surround_colour = "\x1b[1;37;49m"
+        white_colour = "\x1b[1;34;49m"
+        black_colour = "\x1b[1;31;49m"
+        reset_colour = "\x1b[0m"
+
+        print(surround_colour + "=======================")
+        if len(self.white_captured) < 9:
+            print(self.white_captured)
+        else:
+            print(self.white_captured[:8])
+            print(self.white_captured[8:])
+        print("=======================")
+        print("    a b c d e f g h    ")
+        print(reset_colour)
+        for i in range(8):
+            row = [surround_colour + str(8 - i), "   "]
+            for square in self.board[i*8:i*8+8]:
+                if square:
+                    if square.colour:
+                        row.append(white_colour + str(square) + surround_colour)
+                    else:
+                        row.append(black_colour + str(square) + surround_colour)
+                    row.append(' ')
+                else:
+                    row.append("\x1b[1;37;49mx " + surround_colour)
+            row.append("  ")
+            row.append(str(8 - i))
+            row.append("\x1b[2;36;49m")
+            if i == 1:
+                row.append("     History:")
+            elif 1 < i < 7 and i - 2 < len(self.move_history):
+                item = i + (len(self.move_history) - 7 if len(self.move_history) > 5 else -2)
+                row.append(f"     {str(item + 1)}. {str(self.move_history[item])}")
+            row.append(surround_colour)
+            print(''.join(row))
+        print()
+        print("    a b c d e f g h    ")
+        print("=======================")
+        if len(self.white_captured) < 9:
+            print(self.black_captured)
+        else:
+            print(self.black_captured[:8])
+            print(self.black_captured[8:])
+        print("=======================")
+        print(f"     {white_colour + 'White' + reset_colour if self.white_turn else black_colour + 'Black' + reset_colour} to move")
+        print(reset_colour)
 
     def export_fen(self) -> str:
         """Returns a string containing fen notation representing the current state
