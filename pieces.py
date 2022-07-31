@@ -26,12 +26,18 @@ class Board():
                 default_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") -> None:
         self.white_turn = white_turn
         self.moves_made = moves_made
+        self.halfmove_clock = 0
         self.white_score = white_score
         self.black_score = black_score
         self.board = [None] * 64
         self.captured = []
         self.default_fen = default_fen
-        self.default_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
+        self.white_kingside = True
+        self.white_queenside = True
+        self.black_kingside = True
+        self.black_queenside = True
+        self.en_passant_targets = []
+        # self.default_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
 
     def move(self):
         """Takes input from user and calls the corresponding methods in piece classes"""
@@ -74,10 +80,11 @@ class Board():
         # use default fen string for a new game if none supplied
         if fen is None:
             fen = self.default_fen
-
+        fen = fen.split(" ")
+        print(f"Initialising with fen {fen}")
         # populate board with piece objects
         square_id = 0
-        for row in fen.split(" ")[0].split("/"):
+        for row in fen[0].split("/"):
             for square in row:
                 square = self.fen_to_obj(square)
                 if isinstance(square, Piece):
@@ -85,6 +92,19 @@ class Board():
                     square_id += 1
                 else:
                     square_id += square
+
+        self.white_turn = "w" == fen[1]
+
+        self.white_kingside = "K" in fen[2]
+        self.white_queenside = "Q" in fen[2]
+        self.black_kingside = "k" in fen[2]
+        self.black_queenside = "q" in fen[2]
+
+        self.en_passant_targets = [fen[3][i:i+2] for i in range(0, len(fen[3]), 2)] if fen[3] != "-" else []
+
+        self.halfmove_clock = fen[4]
+
+        self.moves_made = fen[5]
 
 
     def export_fen(self) -> str:
