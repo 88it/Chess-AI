@@ -2,6 +2,9 @@
 Holds all classes for chess pieces
 """
 
+from colorama import init
+init()
+
 
 class Board():
     """Aggregate class to store pieces and board operations
@@ -28,6 +31,7 @@ class Board():
         self.board = [None] * 64
         self.captured = []
         self.default_fen = default_fen
+        self.default_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
 
     def move(self):
         """Takes input from user and calls the corresponding methods in piece classes"""
@@ -37,6 +41,26 @@ class Board():
 
     def display(self):
         """Displays the game board in the terminal"""
+        print("\x1b[1;33;49m=======================")
+        print("    a b c d e f g h    ")
+        print()
+        for i in range(8):
+            row = [str(8 - i), "   "]
+            for square in self.board[i*8:i*8+8]:
+                if square:
+                    if square.colour:
+                        row.append("\x1b[1;34;49m" + str(square) + "\x1b[33;49m")
+                    else:
+                        row.append("\x1b[1;31;49m" + str(square) + "\x1b[33;49m")
+                    row.append(' ')
+                else:
+                    row.append("x ")
+            row.append("  ")
+            row.append(str(8 - i))
+            print(''.join(row))
+        print()
+        print("    a b c d e f g h    ")
+        print("=======================\x1b[0m")
 
     def setup(self, fen: str=None) -> None:
         """Creates game board contaning piece objects from a fen notation string template
@@ -55,7 +79,7 @@ class Board():
         square_id = 0
         for row in fen.split(" ")[0].split("/"):
             for square in row:
-                square = self.id_fen_square(square)
+                square = self.fen_to_obj(square)
                 if isinstance(square, Piece):
                     self.board[square_id] = square
                     square_id += 1
@@ -68,8 +92,8 @@ class Board():
             of the game"""
 
     @staticmethod
-    def id_fen_square(char: str) -> object:
-        """Takes a single letter from a fen string and created the corresponding piece object
+    def fen_to_obj(char: str) -> object:
+        """Takes a single letter from a fen string and creates the corresponding piece object
 
         Args:
             char (str): The letter to use
@@ -113,10 +137,10 @@ class Piece:
         self.position = position
         self.value = value
         self.colour = colour
+        self.fen = "None"
 
     def __str__(self) -> str:
-        return f"{'White' if self.colour else 'Black'}"\
-               f" in position {self.position}, Value: {self.value}"
+        return self.fen.upper() if self.colour else self.fen
 
 class Pawn(Piece):
     """Class to represent a Pawn chess piece
@@ -124,6 +148,7 @@ class Pawn(Piece):
     def __init__(self, position: str, value: int, colour: bool, has_moved=False) -> None:
         super().__init__(position, value, colour)
         self.has_moved = has_moved
+        self.fen = "p"
 
     def move(self, move_to: str) -> None:
         """Moves piece to an empty position
@@ -150,6 +175,10 @@ class Rook(Piece):
     """Class to represent a Rook chess piece
     """
 
+    def __init__(self, position: str, value: int, colour: bool) -> None:
+        super().__init__(position, value, colour)
+        self.fen = "r"
+
     def move(self, move_to: str) -> None:
         """Moves piece to an empty position
 
@@ -169,6 +198,10 @@ class Knight(Piece):
     """Class to represent a Knight chess piece
     """
 
+    def __init__(self, position: str, value: int, colour: bool) -> None:
+        super().__init__(position, value, colour)
+        self.fen = "n"
+
     def move(self, move_to: str) -> None:
         """Moves piece to an empty position
 
@@ -186,6 +219,10 @@ class Knight(Piece):
 class Bishop(Piece):
     """Class to represent a Bishop chess piece
     """
+
+    def __init__(self, position: str, value: int, colour: bool) -> None:
+        super().__init__(position, value, colour)
+        self.fen = "b"
 
     def move(self, move_to: str) -> None:
         """Moves piece to an empty position
@@ -205,6 +242,10 @@ class Bishop(Piece):
 class Queen(Piece):
     """Class to represent a Queen chess piece
     """
+
+    def __init__(self, position: str, value: int, colour: bool) -> None:
+        super().__init__(position, value, colour)
+        self.fen = "q"
 
     def move(self, move_to: str) -> None:
         """Moves piece to an empty position
@@ -227,6 +268,7 @@ class King(Piece):
     def __init__(self, position: str, value: int, colour: bool, check=False) -> None:
         super().__init__(position, value, colour)
         self.check = check
+        self.fen = "k"
 
     def move(self, move_to: str) -> None:
         """Moves piece to an empty position
