@@ -8,6 +8,8 @@ class Board():
 
     Attributes:
         pieces (List[object]): List of the pieces on the board
+        default_fen (str): Fen to be used every time a new game is started. Reccomended
+            to leave as default which is a standard setup
 
     Methods:
         move: Take user input and call the required piece methods
@@ -17,13 +19,15 @@ class Board():
 
     """
 
-    def __init__(self, white_turn=True, moves_made=0, white_score=0, black_score=0) -> None:
+    def __init__(self, white_turn=True, moves_made=0, white_score=0, black_score=0,
+                default_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") -> None:
         self.white_turn = white_turn
         self.moves_made = moves_made
         self.white_score = white_score
         self.black_score = black_score
         self.board = [None] * 64
         self.captured = []
+        self.default_fen = default_fen
 
     def move(self):
         """Takes input from user and calls the corresponding methods in piece classes"""
@@ -34,8 +38,62 @@ class Board():
     def display(self):
         """Displays the game board in the terminal"""
 
-    def setup(self, fen: str) -> None:
-        """Creates game board contaning piece objects from a fen notation string template"""
+    def setup(self, fen: str=None) -> None:
+        """Creates game board contaning piece objects from a fen notation string template
+
+        Args:
+            fen (str): Fen notation to be used as a template for the board.
+                Defaults to 'None' and the self.default_fen value will be used
+                but if a value is supplied that overrides it for instance to
+                play a pre-started game
+        """
+        # use default fen string for a new game if none supplied
+        if fen is None:
+            fen = self.default_fen
+
+        # populate board with piece objects
+        square_id = 0
+        for row in fen.split(" ")[0].split("/"):
+            for square in row:
+                square = self.id_fen_square(square)
+                if isinstance(square, Piece):
+                    self.board[square_id] = square
+                    square_id += 1
+                else:
+                    square_id += square
+
+
+    def export_fen(self) -> str:
+        """Returns a string containing fen notation representing the current state
+            of the game"""
+
+    @staticmethod
+    def id_fen_square(char: str) -> object:
+        """Takes a single letter from a fen string and created the corresponding piece object
+
+        Args:
+            char (str): The letter to use
+        """
+
+        piece = None
+        white = char.isupper()
+        char = char.lower()
+        if char == "p":
+            piece = Pawn(1, 1, white)
+        elif char == "r":
+            piece = Rook(1, 5, white)
+        elif char == "n":
+            piece = Knight(1, 3, white)
+        elif char == "b":
+            piece = Bishop(1, 3, white)
+        elif char == "q":
+            piece = Queen(1, 9, white)
+        elif char == "k":
+            piece = King(1, 0, white)
+        else:
+            return int(char)  # TODO deal with with badly formatted fen strings
+
+        return piece
 
 
 class Piece:
