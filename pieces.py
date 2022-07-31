@@ -100,7 +100,8 @@ class Board():
         self.black_kingside = "k" in fen[2]
         self.black_queenside = "q" in fen[2]
 
-        self.en_passant_targets = [fen[3][i:i+2] for i in range(0, len(fen[3]), 2)] if fen[3] != "-" else []
+        self.en_passant_targets = [fen[3][i:i+2] for i in range(0, len(fen[3]), 2)] \
+            if fen[3] != "-" else []
 
         self.halfmove_clock = fen[4]
 
