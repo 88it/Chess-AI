@@ -100,20 +100,20 @@ class Board():
         """
 
         piece = None
-        white = char.isupper()
+        is_white = char.isupper()
         char = char.lower()
         if char == "p":
-            piece = Pawn(1, 1, white)
+            piece = Pawn(is_white)
         elif char == "r":
-            piece = Rook(1, 5, white)
+            piece = Rook(is_white)
         elif char == "n":
-            piece = Knight(1, 3, white)
+            piece = Knight(is_white)
         elif char == "b":
-            piece = Bishop(1, 3, white)
+            piece = Bishop(is_white)
         elif char == "q":
-            piece = Queen(1, 9, white)
+            piece = Queen(is_white)
         elif char == "k":
-            piece = King(1, 0, white)
+            piece = King(is_white)
         else:
             return int(char)  # TODO deal with with badly formatted fen strings
 
@@ -133,10 +133,9 @@ class Piece:
     Methods:
     """
 
-    def __init__(self, position: str, value: int, colour: bool) -> None:
-        self.position = position
-        self.value = value
-        self.colour = colour
+    def __init__(self, is_white: bool) -> None:
+        self.colour = is_white
+        self.value = None
         self.fen = "None"
 
     def __str__(self) -> str:
@@ -145,9 +144,10 @@ class Piece:
 class Pawn(Piece):
     """Class to represent a Pawn chess piece
     """
-    def __init__(self, position: str, value: int, colour: bool, has_moved=False) -> None:
-        super().__init__(position, value, colour)
+    def __init__(self, is_white: bool, has_moved=False) -> None:
+        super().__init__(is_white)
         self.has_moved = has_moved
+        self.value = 1
         self.fen = "p"
 
     def move(self, move_to: str) -> None:
@@ -175,8 +175,9 @@ class Rook(Piece):
     """Class to represent a Rook chess piece
     """
 
-    def __init__(self, position: str, value: int, colour: bool) -> None:
-        super().__init__(position, value, colour)
+    def __init__(self, is_white: bool) -> None:
+        super().__init__( is_white)
+        self.value = 5
         self.fen = "r"
 
     def move(self, move_to: str) -> None:
@@ -198,8 +199,9 @@ class Knight(Piece):
     """Class to represent a Knight chess piece
     """
 
-    def __init__(self, position: str, value: int, colour: bool) -> None:
-        super().__init__(position, value, colour)
+    def __init__(self, is_white: bool) -> None:
+        super().__init__(is_white)
+        self.value = 3
         self.fen = "n"
 
     def move(self, move_to: str) -> None:
@@ -220,8 +222,9 @@ class Bishop(Piece):
     """Class to represent a Bishop chess piece
     """
 
-    def __init__(self, position: str, value: int, colour: bool) -> None:
-        super().__init__(position, value, colour)
+    def __init__(self, is_white: bool) -> None:
+        super().__init__(is_white)
+        self.value = 3
         self.fen = "b"
 
     def move(self, move_to: str) -> None:
@@ -243,8 +246,9 @@ class Queen(Piece):
     """Class to represent a Queen chess piece
     """
 
-    def __init__(self, position: str, value: int, colour: bool) -> None:
-        super().__init__(position, value, colour)
+    def __init__(self, is_white: bool) -> None:
+        super().__init__(is_white)
+        self.value = 9
         self.fen = "q"
 
     def move(self, move_to: str) -> None:
@@ -265,9 +269,10 @@ class Queen(Piece):
 class King(Piece):
     """Class to represent a King chess piece
     """
-    def __init__(self, position: str, value: int, colour: bool, check=False) -> None:
-        super().__init__(position, value, colour)
+    def __init__(self, is_white: bool, check=False) -> None:
+        super().__init__(is_white)
         self.check = check
+        self.value = None
         self.fen = "k"
 
     def move(self, move_to: str) -> None:
