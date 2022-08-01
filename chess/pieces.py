@@ -2,7 +2,6 @@
 Holds all classes for chess pieces
 """
 
-import re
 from colorama import init
 init()
 
@@ -38,8 +37,6 @@ class Board():
         self.black_kingside = True
         self.black_queenside = True
         self.en_passant_targets = []
-        self.start_time = None
-        self.finish_time = None
         self.move_history = [1, 2, 3, 4, 5, 6, 7]
         self.default_fen = default_fen
         # self.default_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
@@ -212,6 +209,7 @@ class Piece:
     def __str__(self) -> str:
         return self.fen.upper() if self.colour else self.fen
 
+
 class Pawn(Piece):
     """Class to represent a Pawn chess piece
     """
@@ -288,6 +286,7 @@ class Knight(Piece):
         Args:
             move_to (str): Position to move the piece to
         """
+
 
 class Bishop(Piece):
     """Class to represent a Bishop chess piece
@@ -378,6 +377,30 @@ class King(Piece):
     def check_checkmate(self) -> bool:
         """Checks for any available moves, returns 'False' if
             moves available and 'True' if none are available"""
+
+
+class Timer():
+    """Handles timing the game"""
+    def __init__(self, start=None, finish=None) -> None:
+        self.start_time = start
+        self.finish_time = finish
+        self.delta = 0
+
+    def start_timer(self):
+        """Starts the timer"""
+
+    def stop_timer(self):
+        """Stops the timer"""
+
+    def get_time(self) -> str:
+        """Returns the current timer value"""
+
+    def set_time(self, time):
+        """Sets timer to value of 'time'
+        
+        Args:
+            time: value to set timer to
+        """
 
 
 if __name__ == "__main__":
