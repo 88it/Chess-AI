@@ -95,13 +95,15 @@ class Board():
 
     def display(self):
         """Displays the game board in the terminal
-        This is extremely messy but it does work..."""
+        This is pretty messy but it does work..."""
 
+        # text colouring done by ASCII escape codes
         surround_colour = "\x1b[1;37;49m"
         white_colour = "\x1b[1;34;49m"
         black_colour = "\x1b[1;31;49m"
         reset_colour = "\x1b[0m"
 
+        # print top border and black captured pieces
         print(surround_colour + "=======================")
         if len(self.white_captured) < 9:
             print(self.white_captured)
@@ -109,8 +111,10 @@ class Board():
             print(self.white_captured[:8])
             print(self.white_captured[8:])
         print("=======================")
+        # print guide letters from naming squares
         print("    a b c d e f g h    ")
         print(reset_colour)
+        # create a list of items to be printed in a row showing guide numbers and the board
         for i in range(8):
             row = [surround_colour + str(8 - i), "   "]
             for square in self.board[i*8:i*8+8]:
@@ -125,15 +129,19 @@ class Board():
             row.append("  ")
             row.append(str(8 - i))
             row.append("\x1b[2;36;49m")
+            # print last 5 items in move history to the side of the board
             if i == 1:
                 row.append("     History:")
             elif 1 < i < 7 and i - 2 < len(self.move_history):
-                item = i + (len(self.move_history) - 7 if len(self.move_history) > 5 else -2)
+                item = i + (len(self.move_history) - 7 if len(self.move_history) > 5 else - 2)
                 row.append(f"     {str(item + 1)}. {str(self.move_history[item])}")
             row.append(surround_colour)
+            # join list into string and print
             print(''.join(row))
         print()
+        # second set of guide letters
         print("    a b c d e f g h    ")
+        # bottom border and white captured pieces
         print("=======================")
         if len(self.white_captured) < 9:
             print(self.black_captured)
@@ -141,7 +149,9 @@ class Board():
             print(self.black_captured[:8])
             print(self.black_captured[8:])
         print("=======================")
-        print(f"     {white_colour + 'White' + reset_colour if self.white_turn else black_colour + 'Black' + reset_colour} to move")
+        # print who's turn it is to move, also indicate white colour they display as on the board
+        print(f"     {white_colour + 'White' if self.white_turn else black_colour + 'Black'}" +
+            surround_colour + " to move")
         print(reset_colour)
 
     def export_fen(self) -> str:
