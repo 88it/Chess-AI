@@ -10,3 +10,4 @@ if __name__ == "__main__":
     board = Board()
     board.setup()
     board.display()
+    # board.play()
