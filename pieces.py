@@ -78,19 +78,23 @@ class Board():
                 else:
                     square_id += square
 
-        # TODO add comments here
+        # store who's turn it is
         self.white_turn = "w" == fen[1]
 
+        # store who can castle and where
         self.white_kingside = "K" in fen[2]
         self.white_queenside = "Q" in fen[2]
         self.black_kingside = "k" in fen[2]
         self.black_queenside = "q" in fen[2]
 
+        # set up list of any pawns vulnerable to en passant
         self.en_passant_targets = [fen[3][i:i+2] for i in range(0, len(fen[3]), 2)] \
             if fen[3] != "-" else []
 
+        # store half move clock
         self.halfmove_clock = fen[4]
 
+        # store number of moves made
         self.moves_made = fen[5]
 
     def display(self):
