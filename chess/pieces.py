@@ -32,10 +32,7 @@ class Board():
         self.board = [None] * 64
         self.white_captured = []
         self.black_captured = []
-        self.white_kingside = True
-        self.white_queenside = True
-        self.black_kingside = True
-        self.black_queenside = True
+        self.castle_available = {"white_kingside": True, "white_queenside": True, "black_kingside": True, "black_queenside": True}
         self.en_passant_targets = []
         self.move_history = [1, 2, 3, 4, 5, 6, 7]
         self.default_fen = default_fen
@@ -79,10 +76,10 @@ class Board():
         self.white_turn = "w" == fen[1]
 
         # store who can castle and where
-        self.white_kingside = "K" in fen[2]
-        self.white_queenside = "Q" in fen[2]
-        self.black_kingside = "k" in fen[2]
-        self.black_queenside = "q" in fen[2]
+        self.castle_available["white_kingside"] = "K" in fen[2]
+        self.castle_available["white_queenside"] = "Q" in fen[2]
+        self.castle_available["black_kingside"] = "k" in fen[2]
+        self.castle_available["black_queenside"] = "q" in fen[2]
 
         # set up list of any pawns vulnerable to en passant
         self.en_passant_targets = [fen[3][i:i+2] for i in range(0, len(fen[3]), 2)] \
