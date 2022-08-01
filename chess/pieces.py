@@ -22,20 +22,21 @@ class Board():
 
     """
 
-    def __init__(self, white_turn=True, moves_made=0, white_score=0, black_score=0,
+    def __init__(self, white_turn=True, white_score=0, black_score=0,
                 default_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") -> None:
         self.white_turn = white_turn
-        self.moves_made = moves_made
-        self.halfmove_clock = 0
         self.white_score = white_score
         self.black_score = black_score
         self.board = [None] * 64
         self.white_captured = []
         self.black_captured = []
-        self.castle_available = {"white_kingside": True, "white_queenside": True, "black_kingside": True, "black_queenside": True}
+        self.castle_available = \
+            {"white_kingside": True, "white_queenside": True,
+             "black_kingside": True, "black_queenside": True}
         self.en_passant_targets = []
-        self.move_history = [1, 2, 3, 4, 5, 6, 7]
         self.default_fen = default_fen
+        self.timer = Timer()
+        self.move_history = MoveTracking()
         # self.default_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
 
     def play(self) -> None:
@@ -86,10 +87,10 @@ class Board():
             if fen[3] != "-" else []
 
         # store half move clock
-        self.halfmove_clock = fen[4]
+        self.timer.halfmove_clock = fen[4]
 
         # store number of moves made
-        self.moves_made = fen[5]
+        self.timer.moves_made = fen[5]
 
     def display(self):
         """Displays the game board in the terminal
@@ -131,8 +132,8 @@ class Board():
             if i == 1:
                 row.append("     History:")
             elif 1 < i < 7 and i - 2 < len(self.move_history):
-                item = i + (len(self.move_history) - 7 if len(self.move_history) > 5 else - 2)
-                row.append(f"     {str(item + 1)}. {str(self.move_history[item])}")
+                item = i + (len(self.move_history) - 7 if len(self.move_history.get_history(5)) > 5 else - 2)
+                row.append(f"     {str(item + 1)}. {str(self.move_history.get_history(5)[item])}")
             row.append(surround_colour)
             # join list into string and print
             print(''.join(row))
@@ -394,10 +395,34 @@ class Timer():
 
     def set_time(self, time):
         """Sets timer to value of 'time'
-        
+
         Args:
             time: value to set timer to
         """
+
+class MoveTracking():
+    """Keeps track of moves made during the game"""
+
+    def __init__(self, moves_made=0, halfmove_clock=0) -> None:
+        self.moves_made = moves_made
+        self.halfmove_clock = halfmove_clock
+        self.move_history = [1, 2, 3, 4, 5, 6, 7]
+
+    def add_move(self, move) -> None:
+        """Updates attributes according to move made
+
+        Args:
+            move (str): The move that was made
+        """
+
+    def get_history(self, amount) -> list:
+        """Returns a selection of values from the move history
+
+        Args:
+            amount (int): How many values to return. If not enough values are present
+                as many as possible will be returned
+        """
+        return [1, 2, 3, 4, 5]
 
 
 if __name__ == "__main__":
