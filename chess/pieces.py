@@ -64,32 +64,35 @@ class Board():
                 move = input("Enter a move: ").strip()
                 # use regex to check input mathes the correct format
                 regex = re.search(r"([A-Ha-h][1-8]\s[A-Ha-h][1-8])", move)
-                if not regex or regex.span()[1] != len(move):
-                    raise InvalidInputError
                 try:
-                    move = move.split(" ")
-                    move_from = self.square_to_id(move[0])
-                    move_to = self.square_to_id(move[1])
+                    if not regex or regex.span()[1] != len(move):
+                        raise InvalidInputError
                 except InvalidInputError:
                     print("Invalid input, please try again")
                 else:
-                    errors = self.board[move_from].validate_move(move[0])
-                    if not errors:
-                        input_valid = True
-                        if self.board[move_to]:
-                            if self.white_turn:
-                                self.white_captured.append(str(self.board[move_to]))
-                            else:
-                                self.black_captured.append(str(self.board[move_to]))
-                        self.board[move_to] = self.board[move_from]
-                        self.board[move_from] = None
-                    else:
-                        print(error for error in errors)
+                    input_valid = self.move(move)
 
             self.white_turn = not self.white_turn
 
-    def move(self):
+    def move(self, move):
         """Takes input from user and calls the corresponding methods in piece classes"""
+        move = move.split(" ")
+        move_from = self.square_to_id(move[0])
+        move_to = self.square_to_id(move[1])
+        errors = self.board[move_from].validate_move(move[0])
+        if errors:
+            print("Error" + error for error in errors)
+            return False
+
+        if not isinstance(self.board[move_to], Empty):
+            if self.white_turn:
+                self.white_captured.append(str(self.board[move_to]))
+            else:
+                self.black_captured.append(str(self.board[move_to]))
+        self.board[move_to] = self.board[move_from]
+        self.board[move_from] = Empty()
+
+        return True
 
     def update(self):
         """Updates the game board with the result of the piece methods"""
@@ -192,7 +195,7 @@ class Board():
             print(''.join(row))
         print()
         # second set of guide letters
-        print("    a b c d e f g h    ")
+        print(surround_colour + "    a b c d e f g h    ")
         # bottom border and white captured pieces
         print("=======================")
         if len(self.white_captured) < 9:
@@ -322,7 +325,7 @@ class Pawn(Piece):
         Args:
             move_to (str): Position to move the piece to
         """
-        return True
+        return []
 
     def capture(self, move_to: str) -> None:
         """Moves piece to position containing another piece and captures it
