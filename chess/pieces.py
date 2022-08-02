@@ -4,6 +4,7 @@ Holds all classes for chess pieces
 
 # TODO move ASCII colours to sperate class
 
+from shutil import move
 import sys
 import re
 import random
@@ -81,7 +82,7 @@ class Board():
                 else:
                     input_valid = self.move(move_from, move_to)
 
-            self.white_turn = not self.white_turn
+            # self.white_turn = not self.white_turn
 
     def move(self, move_from, move_to):
         """Takes input from user and calls the corresponding methods in piece classes
@@ -91,9 +92,15 @@ class Board():
             move_to (int): The id of the sqaure to try and move the piece to
         """
 
-        errors = self.board[move_from].validate_move(move_from, move_to)
+        errors = []
+        if not isinstance(self.board[move_to], Empty) and self.board[move_to].is_white == self.white_turn:
+            errors.append("Cannot move to a square occupied by your own piece")
+        if not errors:
+            errors.extend(self.board[move_from].validate_move(
+                self.board, move_from, move_to, isinstance(self.board[move_to], Piece))
+            )
         if errors:
-            print("Error" + error for error in errors)
+            print("Error:", *errors)
             return False
 
         if not isinstance(self.board[move_to], Empty):
@@ -101,6 +108,7 @@ class Board():
                 self.white_captured.append(str(self.board[move_to]))
             else:
                 self.black_captured.append(str(self.board[move_to]))
+
         self.board[move_to] = self.board[move_from]
         self.board[move_from] = Empty()
 
@@ -286,16 +294,15 @@ class Piece:
         self.black_colour = "\x1b[1;31;49m"
         self.reset_colour = "\x1b[0m"
 
-    def validate_move(self, move_from: int, move_to: int):
+    def validate_move(self, board: list, move_from: int, move_to: int, capture: bool):
         """Handles move validation that applies to all pieces
 
         Args:
             move_from (int): The id of the square containing the piece to be moved
             move_to (int): The id of the sqaure to try and move the piece to
         """
-        # TODO do general checks here
-        # moving off board
-        # moving to sqaure occupied by your piece
+        # TODO think of and do general checks here
+
 
     def __str__(self, ascii_compatibility_mode=True) -> str:
         if ascii_compatibility_mode:
@@ -303,11 +310,11 @@ class Piece:
                 return self.white_colour + self.fen.upper() + self.reset_colour
 
             return self.black_colour + self.fen + self.reset_colour
-        else:
-            if self.is_white:
-                return self.white_colour + self.white_unicode_icon + self.reset_colour
 
-            return self.black_colour + self.black_unicode_icon + self.reset_colour
+        if self.is_white:
+            return self.white_colour + self.white_unicode_icon + self.reset_colour
+
+        return self.black_colour + self.black_unicode_icon + self.reset_colour
 
 
 class Empty():
@@ -336,13 +343,39 @@ class Pawn(Piece):
         self.value = 1
         self.fen = "p"
 
-    def validate_move(self, move_from: int, move_to: int) -> None:
+    def validate_move(self, board:list, move_from: int, move_to: int, capture: bool) -> list:
         """Moves piece to an empty position
 
         Args:
             move_to (str): Position to move the piece to
         """
-        return []
+        errors = []
+        if capture:
+            # possible = [(-1, -1), (-1, 1)]
+            # actual = [move for move in possible if (move_from, (8 * move[0] + move[1])) not in
+            #     {(7, 8), (15, 16), (23, 24), (31, 32), (39, 40), (47, 48), (55, 56)}]
+            # for move in actual:
+            #     if move_to == move_from + (8 * move[0] + move[1]):
+            #         return errors
+            possible = [(-1, -1), (-1, 1)] if self.is_white else [(1, -1), (1, 1)]
+            actual = {move_from + (8 * move[0] + move[1]) for move in possible if
+                (move_from, move_from + (8 * move[0] + move[1])) not in
+                {(7, 8), (15, 16), (23, 24), (31, 32), (39, 40), (47, 48), (55, 56)}}
+            if move_to not in actual:
+                errors.append("Cannot capture there")
+                return errors
+        else:
+            possible = [(-1, 0)] if self.is_white else [(1, 0)]
+            # TODO check for obstruction here
+            if not self.has_moved and isinstance(board[move_from + 8 * -1 if self.is_white else 1], Empty):
+                possible.append((-2, 0) if self.is_white else (2, 0))
+            actual = {move_from + (8 * move[0] + move[1]) for move in possible}
+            if move_to not in actual:
+                errors.append("Cannot move pawn there")
+                return errors
+        self.has_moved = True
+        return errors
+
 
     def validate_en_passant(self) -> bool:
         """Checks whether an en passant capture is available"""
@@ -362,12 +395,13 @@ class Rook(Piece):
         self.value = 5
         self.fen = "r"
 
-    def validate_move(self, move_from: int, move_to: int) -> None:
+    def validate_move(self, board: list, move_from: int, move_to: int, capture: bool) -> None:
         """Moves piece to an empty position
 
         Args:
             move_to (str): Position to move the piece to
         """
+        return []
 
 
 class Knight(Piece):
@@ -381,12 +415,13 @@ class Knight(Piece):
         self.value = 3
         self.fen = "n"
 
-    def validate_move(self, move_from: int, move_to: int) -> None:
+    def validate_move(self, board: list, move_from: int, move_to: int, capture: bool) -> None:
         """Moves piece to an empty position
 
         Args:
             move_to (str): Position to move the piece to
         """
+        return []
 
 
 class Bishop(Piece):
