@@ -2,6 +2,7 @@
 Holds all classes for chess pieces
 """
 
+import sys
 from colorama import init
 init()
 
@@ -42,22 +43,30 @@ class Board():
     def play(self) -> None:
         """Gets starting conditions from user and starts the game"""
         while True:
+            input_valid = False
             self.display()
-            move = input("Enter a move: ").split(" ")
-            move_from = self.square_to_id(move[0])
-            move_to = self.square_to_id(move[1])
-            print(self.board[move_from].__dict__)
-            if self.board[move_from] and self.board[move_from].is_white == self.white_turn:
-                if self.board[move_from].validate_move(move[0]):
-                    if self.board[move_to]:
-                        if self.white_turn:
-                            self.white_captured.append(str(self.board[move_to]))
+            while not input_valid:
+                move = input("Enter a move: ").split(" ")
+                try:
+                    move_from = self.square_to_id(move[0])
+                    move_to = self.square_to_id(move[1])
+                except IndexError:
+                    print("IndexError caught")
+                else:
+                    if self.board[move_from] and self.board[move_from].is_white == self.white_turn:
+                        if self.board[move_from].validate_move(move[0]):
+                            input_valid = True
+                            if self.board[move_to]:
+                                if self.white_turn:
+                                    self.white_captured.append(str(self.board[move_to]))
+                                else:
+                                    self.black_captured.append(str(self.board[move_to]))
+                            self.board[move_to] = self.board[move_from]
+                            self.board[move_from] = None
                         else:
-                            self.black_captured.append(str(self.board[move_to]))
-                    self.board[move_to] = self.board[move_from]
-                    self.board[move_from] = None
-            else:
-                print("invalid move")
+                            print("Invalid move, please try again")
+                    else:
+                        print("invalid move, please try again")
 
             self.white_turn = not self.white_turn
 
@@ -81,6 +90,16 @@ class Board():
             fen = self.default_fen
         fen = fen.split(" ")
         print(f"Initialising with fen {fen}")
+        # check whether terminal supports unicode characters
+        try:
+            '┌┬┐╔╦╗╒╤╕╓╥╖│║─═├┼┤╠╬╣╞╪╡╟╫╢└┴┘╚╩╝╘╧╛╙╨╜'.encode(sys.stdout.encoding)
+            test = True
+        except UnicodeEncodeError:
+            test = False
+
+        if not test:
+            print('Unsupported characters in',sys.stdout.encoding)
+            print("Using ASCII")
         # populate board with piece objects
         square_id = 0
         for row in fen[0].split("/"):
@@ -144,14 +163,14 @@ class Board():
                     row.append("\x1b[1;37;49mx " + surround_colour)
             row.append("  ")
             row.append(str(8 - i))
-            row.append("\x1b[2;36;49m")
+            row.append("\x1b[0;36;49m")
             # print last 5 items in move history to the side of the board
             if i == 1:
                 row.append("     History:")
             elif 1 < i < 7 and i - 2 < len(self.move_history.get_history(5)):
                 item = i + (len(self.move_history.get_history(5)) - 7 if len(self.move_history.get_history(5)) > 5 else - 2)
                 row.append(f"     {str(item + 1)}. {str(self.move_history.get_history(5)[item])}")
-            row.append(surround_colour)
+            row.append(reset_colour)
             # join list into string and print
             print(''.join(row))
         print()
@@ -229,16 +248,24 @@ class Piece:
         self.is_white = is_white
         self.value = None
         self.fen = "None"
+        self.white_unicode_icon = "None"
+        self.black_unicode_icon = "None"
         self.white_colour = "\x1b[1;34;49m"
         self.black_colour = "\x1b[1;31;49m"
         self.reset_colour = "\x1b[0m"
 
 
-    def __str__(self) -> str:
-        if self.is_white:
-            return self.white_colour + self.fen.upper() + self.reset_colour
+    def __str__(self, ascii_compatibility_mode=True) -> str:
+        if ascii_compatibility_mode:
+            if self.is_white:
+                return self.white_colour + self.fen.upper() + self.reset_colour
 
-        return self.black_colour + self.fen + self.reset_colour
+            return self.black_colour + self.fen + self.reset_colour
+        else:
+            if self.is_white:
+                return self.white_colour + self.white_unicode_icon + self.reset_colour
+
+            return self.black_colour + self.black_unicode_icon + self.reset_colour
 
 
 class Pawn(Piece):
@@ -247,6 +274,8 @@ class Pawn(Piece):
     def __init__(self, is_white: bool, has_moved=False) -> None:
         super().__init__(is_white)
         self.has_moved = has_moved
+        self.white_unicode_icon = "\u2659"
+        self.black_unicode_icon = "\u265F"
         self.value = 1
         self.fen = "p"
 
@@ -278,6 +307,8 @@ class Rook(Piece):
 
     def __init__(self, is_white: bool) -> None:
         super().__init__( is_white)
+        self.white_unicode_icon = "\u2656"
+        self.black_unicode_icon = "\u265C"
         self.value = 5
         self.fen = "r"
 
@@ -302,6 +333,8 @@ class Knight(Piece):
 
     def __init__(self, is_white: bool) -> None:
         super().__init__(is_white)
+        self.white_unicode_icon = "\u2658"
+        self.black_unicode_icon = "\u265E"
         self.value = 3
         self.fen = "n"
 
@@ -326,6 +359,8 @@ class Bishop(Piece):
 
     def __init__(self, is_white: bool) -> None:
         super().__init__(is_white)
+        self.white_unicode_icon = "\u2657"
+        self.black_unicode_icon = "\u265D"
         self.value = 3
         self.fen = "b"
 
@@ -350,6 +385,8 @@ class Queen(Piece):
 
     def __init__(self, is_white: bool) -> None:
         super().__init__(is_white)
+        self.white_unicode_icon = "\u2655"
+        self.black_unicode_icon = "\u265B"
         self.value = 9
         self.fen = "q"
 
@@ -373,6 +410,8 @@ class King(Piece):
     """
     def __init__(self, is_white: bool, check=False) -> None:
         super().__init__(is_white)
+        self.white_unicode_icon = "\u2654"
+        self.black_unicode_icon = "\u265A"
         self.check = check
         self.value = None
         self.fen = "k"
