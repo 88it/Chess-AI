@@ -2,6 +2,8 @@
 Holds all classes for chess pieces
 """
 
+# TODO move ASCII colours to sperate class
+
 import sys
 import re
 import random
@@ -41,50 +43,48 @@ class Board():
         self.timer = Timer()
         self.move_history = MoveTracking()
         self.player_white = True
+        self.game_in_progress = False
         # self.default_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
 
     def play(self) -> None:
         """Gets starting conditions from user and starts the game"""
         colour = input("What colour would you like to play as?\n"
             "1 - White, 2 - Black, or 3 - Random? ")
-        if colour == "1":
-            self.player_white = True
-        elif colour == "2":
-            self.player_white = False
-        elif colour == "3":
-            self.player_white = random.choice([True, False])
+        self.player_white =  {
+            "1": True,
+            "2": False,
+            "3": random.choice([True, False])
+        }.get(colour)
 
-        while True:
+        self.game_in_progress = True
+        while self.game_in_progress:
             input_valid = False
-            self.display()
+            self.display_board()
             while not input_valid:
                 move = input("Enter a move: ").strip()
                 # use regex to check input mathes the correct format
-                regex = re.search(r"([A-z][1-8]\s[A-z][1-8])", move)
-                if regex and regex.span()[1] == len(move):
-                    print("regex match")
+                regex = re.search(r"([A-Ha-h][1-8]\s[A-Ha-h][1-8])", move)
+                if not regex or regex.span()[1] != len(move):
+                    raise InvalidInputError
                 try:
                     move = move.split(" ")
                     move_from = self.square_to_id(move[0])
                     move_to = self.square_to_id(move[1])
-                except IndexError:
+                except InvalidInputError:
                     print("Invalid input, please try again")
                 else:
-                    if self.board[move_from] and self.board[move_from].is_white == self.white_turn:
-                        if self.board[move_from].validate_move(move[0]):
-                            input_valid = True
-                            if self.board[move_to]:
-                                if self.white_turn:
-                                    self.white_captured.append(str(self.board[move_to]))
-                                else:
-                                    self.black_captured.append(str(self.board[move_to]))
-                            self.board[move_to] = self.board[move_from]
-                            self.board[move_from] = None
-                        else:
-                            print("Invalid move, please try again")
+                    errors = self.board[move_from].validate_move(move[0])
+                    if not errors:
+                        input_valid = True
+                        if self.board[move_to]:
+                            if self.white_turn:
+                                self.white_captured.append(str(self.board[move_to]))
+                            else:
+                                self.black_captured.append(str(self.board[move_to]))
+                        self.board[move_to] = self.board[move_from]
+                        self.board[move_from] = None
                     else:
-                        print("First square must contain a piece of your colour, "
-                        "please try again")
+                        print(error for error in errors)
 
             self.white_turn = not self.white_turn
 
@@ -127,7 +127,9 @@ class Board():
                     self.board[square_id] = square
                     square_id += 1
                 else:
-                    square_id += square
+                    for i in range(square):
+                        self.board[square_id]= Empty()
+                        square_id += 1
 
         # store who's turn it is
         self.white_turn = "w" == fen[1]
@@ -148,7 +150,7 @@ class Board():
         # store number of moves made
         self.timer.moves_made = fen[5]
 
-    def display(self):
+    def display_board(self):
         """Displays the game board in the terminal
         This is pretty messy but it does work..."""
 
@@ -173,13 +175,8 @@ class Board():
             row = [surround_colour + str(8 - board_i), "   "]
             for square in self.board[board_i*8:board_i*8+8]:
                 if square:
-                    if square.is_white:
-                        row.append(str(square) + surround_colour)
-                    else:
-                        row.append(str(square) + surround_colour)
+                    row.append(str(square) + surround_colour)
                     row.append(' ')
-                else:
-                    row.append("\x1b[1;37;49mx " + surround_colour)
             row.append("  ")
             row.append(str(8 - board_i))
             row.append("\x1b[0;36;49m")
@@ -187,7 +184,8 @@ class Board():
             if i == 1:
                 row.append("     History:")
             elif 1 < i < 7 and i - 2 < len(self.move_history.get_history(5)):
-                item = i + (len(self.move_history.get_history(5)) - 7 if len(self.move_history.get_history(5)) > 5 else - 2)
+                item = i + (len(self.move_history.get_history(5)) -
+                    7 if len(self.move_history.get_history(5)) > 5 else - 2)
                 row.append(f"     {str(item + 1)}. {str(self.move_history.get_history(5)[item])}")
             row.append(reset_colour)
             # join list into string and print
@@ -273,6 +271,12 @@ class Piece:
         self.black_colour = "\x1b[1;31;49m"
         self.reset_colour = "\x1b[0m"
 
+    def validate_move(self, move_to):
+        """Handles move validation that applies to all pieces"""
+        # TODO do general checks here
+        # moving to same square
+        # moving off board
+        # moving to swaure occupied by your piece
 
     def __str__(self, ascii_compatibility_mode=True) -> str:
         if ascii_compatibility_mode:
@@ -286,6 +290,20 @@ class Piece:
 
             return self.black_colour + self.black_unicode_icon + self.reset_colour
 
+
+class Empty():
+    """All the squares with no pieces"""
+
+    def __init__(self) -> None:
+        self.colour = "\x1b[1;37;49m"
+        self.reset_colour = "\x1b[0m"
+
+    def validate_move(self, move_to):
+        """Returns error message as player has selected a square with no pieces"""
+        return ["First square must contain a piece of your colour"]
+
+    def __str__(self) -> str:
+        return self.colour + "x" + self.reset_colour
 
 class Pawn(Piece):
     """Class to represent a Pawn chess piece
@@ -516,6 +534,9 @@ class MoveTracking():
         """
         return [1, 2, 3, 4, 5]
 
+
+class InvalidInputError(Exception):
+    """Will be raised in response to invalid user input to prevent program crashing"""
 
 if __name__ == "__main__":
     pass
