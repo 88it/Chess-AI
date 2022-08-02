@@ -3,11 +3,10 @@ Main file to be run
 """
 
 
-from pieces import Board
+from chess import Board
 
 
 if __name__ == "__main__":
     board = Board()
     board.setup()
-    board.display()
-    # board.play()
+    board.play()
