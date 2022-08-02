@@ -66,20 +66,32 @@ class Board():
                 regex = re.search(r"([A-Ha-h][1-8]\s[A-Ha-h][1-8])", move)
                 try:
                     if not regex or regex.span()[1] != len(move):
-                        raise InvalidInputError
-                except InvalidInputError:
+                        raise InvalidInputError(
+                            "Regex issue - regex: {regex}, span: "
+                            f"{regex.span()[1] if regex else 'None'}, length: {len(move)}"
+                        )
+                    move = move.split(" ")
+                    move_from = self.square_to_id(move[0])
+                    move_to = self.square_to_id(move[1])
+                    if move_from == move_to:
+                        raise InvalidInputError("Values equal")
+                except InvalidInputError as error:
                     print("Invalid input, please try again")
+                    print(f"({error})")
                 else:
-                    input_valid = self.move(move)
+                    input_valid = self.move(move_from, move_to)
 
             self.white_turn = not self.white_turn
 
-    def move(self, move):
-        """Takes input from user and calls the corresponding methods in piece classes"""
-        move = move.split(" ")
-        move_from = self.square_to_id(move[0])
-        move_to = self.square_to_id(move[1])
-        errors = self.board[move_from].validate_move(move[0])
+    def move(self, move_from, move_to):
+        """Takes input from user and calls the corresponding methods in piece classes
+
+        Args:
+            move_from (int): The id of the square containing the piece to be moved
+            move_to (int): The id of the sqaure to try and move the piece to
+        """
+
+        errors = self.board[move_from].validate_move(move_from, move_to)
         if errors:
             print("Error" + error for error in errors)
             return False
@@ -274,12 +286,16 @@ class Piece:
         self.black_colour = "\x1b[1;31;49m"
         self.reset_colour = "\x1b[0m"
 
-    def validate_move(self, move_to):
-        """Handles move validation that applies to all pieces"""
+    def validate_move(self, move_from: int, move_to: int):
+        """Handles move validation that applies to all pieces
+
+        Args:
+            move_from (int): The id of the square containing the piece to be moved
+            move_to (int): The id of the sqaure to try and move the piece to
+        """
         # TODO do general checks here
-        # moving to same square
         # moving off board
-        # moving to swaure occupied by your piece
+        # moving to sqaure occupied by your piece
 
     def __str__(self, ascii_compatibility_mode=True) -> str:
         if ascii_compatibility_mode:
@@ -301,12 +317,13 @@ class Empty():
         self.colour = "\x1b[1;37;49m"
         self.reset_colour = "\x1b[0m"
 
-    def validate_move(self, move_to):
+    def validate_move(self, move_from, move_to):
         """Returns error message as player has selected a square with no pieces"""
         return ["First square must contain a piece of your colour"]
 
     def __str__(self) -> str:
         return self.colour + "x" + self.reset_colour
+
 
 class Pawn(Piece):
     """Class to represent a Pawn chess piece
@@ -319,20 +336,13 @@ class Pawn(Piece):
         self.value = 1
         self.fen = "p"
 
-    def validate_move(self, move_to: str) -> None:
+    def validate_move(self, move_from: int, move_to: int) -> None:
         """Moves piece to an empty position
 
         Args:
             move_to (str): Position to move the piece to
         """
         return []
-
-    def capture(self, move_to: str) -> None:
-        """Moves piece to position containing another piece and captures it
-
-        Args:
-            move_to (str): Position to move the piece to
-        """
 
     def validate_en_passant(self) -> bool:
         """Checks whether an en passant capture is available"""
@@ -352,15 +362,8 @@ class Rook(Piece):
         self.value = 5
         self.fen = "r"
 
-    def move(self, move_to: str) -> None:
+    def validate_move(self, move_from: int, move_to: int) -> None:
         """Moves piece to an empty position
-
-        Args:
-            move_to (str): Position to move the piece to
-        """
-
-    def capture(self, move_to: str) -> None:
-        """Moves piece to position containing another piece and captures it
 
         Args:
             move_to (str): Position to move the piece to
@@ -378,15 +381,8 @@ class Knight(Piece):
         self.value = 3
         self.fen = "n"
 
-    def move(self, move_to: str) -> None:
+    def validate_move(self, move_from: int, move_to: int) -> None:
         """Moves piece to an empty position
-
-        Args:
-            move_to (str): Position to move the piece to
-        """
-
-    def capture(self, move_to: str) -> None:
-        """Moves piece to position containing another piece and captures it
 
         Args:
             move_to (str): Position to move the piece to
@@ -404,15 +400,8 @@ class Bishop(Piece):
         self.value = 3
         self.fen = "b"
 
-    def move(self, move_to: str) -> None:
+    def validate_move(self, move_from: int, move_to: int) -> None:
         """Moves piece to an empty position
-
-        Args:
-            move_to (str): Position to move the piece to
-        """
-
-    def capture(self, move_to: str) -> None:
-        """Moves piece to position containing another piece and captures it
 
         Args:
             move_to (str): Position to move the piece to
@@ -430,15 +419,8 @@ class Queen(Piece):
         self.value = 9
         self.fen = "q"
 
-    def move(self, move_to: str) -> None:
+    def validate_move(self, move_from: int, move_to: int) -> None:
         """Moves piece to an empty position
-
-        Args:
-            move_to (str): Position to move the piece to
-        """
-
-    def capture(self, move_to: str) -> None:
-        """Moves piece to position containing another piece and captures it
 
         Args:
             move_to (str): Position to move the piece to
@@ -456,15 +438,8 @@ class King(Piece):
         self.value = None
         self.fen = "k"
 
-    def move(self, move_to: str) -> None:
+    def validate_move(self, move_from: int, move_to: int) -> None:
         """Moves piece to an empty position
-
-        Args:
-            move_to (str): Position to move the piece to
-        """
-
-    def capture(self, move_to: str) -> None:
-        """Moves piece to position containing another piece and captures it
 
         Args:
             move_to (str): Position to move the piece to
