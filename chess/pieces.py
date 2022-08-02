@@ -41,10 +41,25 @@ class Board():
 
     def play(self) -> None:
         """Gets starting conditions from user and starts the game"""
-        self.display()
-        move = input("Enter a move: ")
-        print(self.square_to_id(move.split(" ")[0]))
-        
+        while True:
+            self.display()
+            move = input("Enter a move: ").split(" ")
+            move_from = self.square_to_id(move[0])
+            move_to = self.square_to_id(move[1])
+            print(self.board[move_from].__dict__)
+            if self.board[move_from] and self.board[move_from].is_white == self.white_turn:
+                if self.board[move_from].validate_move(move[0]):
+                    if self.board[move_to]:
+                        if self.white_turn:
+                            self.white_captured.append(str(self.board[move_to]))
+                        else:
+                            self.black_captured.append(str(self.board[move_to]))
+                    self.board[move_to] = self.board[move_from]
+                    self.board[move_from] = None
+            else:
+                print("invalid move")
+
+            self.white_turn = not self.white_turn
 
     def move(self):
         """Takes input from user and calls the corresponding methods in piece classes"""
@@ -102,17 +117,15 @@ class Board():
 
         # text colouring done by ASCII escape codes
         surround_colour = "\x1b[1;37;49m"
-        white_colour = "\x1b[1;34;49m"
-        black_colour = "\x1b[1;31;49m"
         reset_colour = "\x1b[0m"
 
         # print top border and black captured pieces
         print(surround_colour + "=======================")
-        if len(self.white_captured) < 9:
-            print(self.white_captured)
+        if len(self.black_captured) < 9:
+            print(' '.join(str(i) for i in self.black_captured))
         else:
-            print(self.white_captured[:8])
-            print(self.white_captured[8:])
+            print(' '.join(str(i) for i in self.black_captured[:8]))
+            print(' '.join(str(i) for i in self.black_captured[8:]))
         print("=======================")
         # print guide letters from naming squares
         print("    a b c d e f g h    ")
@@ -122,10 +135,10 @@ class Board():
             row = [surround_colour + str(8 - i), "   "]
             for square in self.board[i*8:i*8+8]:
                 if square:
-                    if square.colour:
-                        row.append(white_colour + str(square) + surround_colour)
+                    if square.is_white:
+                        row.append(str(square) + surround_colour)
                     else:
-                        row.append(black_colour + str(square) + surround_colour)
+                        row.append(str(square) + surround_colour)
                     row.append(' ')
                 else:
                     row.append("\x1b[1;37;49mx " + surround_colour)
@@ -147,14 +160,11 @@ class Board():
         # bottom border and white captured pieces
         print("=======================")
         if len(self.white_captured) < 9:
-            print(self.black_captured)
+            print(' '.join(str(i) for i in self.white_captured))
         else:
-            print(self.black_captured[:8])
-            print(self.black_captured[8:])
+            print(' '.join(str(i) for i in self.white_captured[:8]))
+            print(' '.join(str(i) for i in self.white_captured[8:]))
         print("=======================")
-        # print who's turn it is to move, also indicate white colour they display as on the board
-        print(f"     {white_colour + 'White' if self.white_turn else black_colour + 'Black'}" +
-            surround_colour + " to move")
         print(reset_colour)
 
     def export_fen(self) -> str:
@@ -164,7 +174,7 @@ class Board():
     @staticmethod
     def square_to_id(square: str) -> int:
         """Converts and returns a square identified by row and column to the id in the board list
-        
+
         Args:
             square (str): The square to convert
         """
@@ -216,12 +226,19 @@ class Piece:
     """
 
     def __init__(self, is_white: bool) -> None:
-        self.colour = is_white
+        self.is_white = is_white
         self.value = None
         self.fen = "None"
+        self.white_colour = "\x1b[1;34;49m"
+        self.black_colour = "\x1b[1;31;49m"
+        self.reset_colour = "\x1b[0m"
+
 
     def __str__(self) -> str:
-        return self.fen.upper() if self.colour else self.fen
+        if self.is_white:
+            return self.white_colour + self.fen.upper() + self.reset_colour
+
+        return self.black_colour + self.fen + self.reset_colour
 
 
 class Pawn(Piece):
@@ -233,12 +250,13 @@ class Pawn(Piece):
         self.value = 1
         self.fen = "p"
 
-    def move(self, move_to: str) -> None:
+    def validate_move(self, move_to: str) -> None:
         """Moves piece to an empty position
 
         Args:
             move_to (str): Position to move the piece to
         """
+        return True
 
     def capture(self, move_to: str) -> None:
         """Moves piece to position containing another piece and captures it
