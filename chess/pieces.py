@@ -43,6 +43,7 @@ class Board():
         """Gets starting conditions from user and starts the game"""
         self.display()
         move = input("Enter a move: ")
+        print(self.square_to_id(move.split(" ")[0]))
         
 
     def move(self):
@@ -159,6 +160,18 @@ class Board():
     def export_fen(self) -> str:
         """Returns a string containing fen notation representing the current state
             of the game"""
+
+    @staticmethod
+    def square_to_id(square: str) -> int:
+        """Converts and returns a square identified by row and column to the id in the board list
+        
+        Args:
+            square (str): The square to convert
+        """
+        # intuitive method
+        # return((ord(square[0]) - 97) + ((8 - int(square[1])) * 8))
+        # simplified maths
+        return ord(square[0]) - 33 - (8 * int(square[1]))
 
     @staticmethod
     def fen_to_obj(char: str) -> object:
