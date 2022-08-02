@@ -4,6 +4,7 @@ Holds all classes for chess pieces
 
 import sys
 import re
+import random
 from colorama import init
 init()
 
@@ -39,10 +40,20 @@ class Board():
         self.default_fen = default_fen
         self.timer = Timer()
         self.move_history = MoveTracking()
+        self.player_white = True
         # self.default_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
 
     def play(self) -> None:
         """Gets starting conditions from user and starts the game"""
+        colour = input("What colour would you like to play as?\n"
+            "1 - White, 2 - Black, or 3 - Random? ")
+        if colour == "1":
+            self.player_white = True
+        elif colour == "2":
+            self.player_white = False
+        elif colour == "3":
+            self.player_white = random.choice([True, False])
+
         while True:
             input_valid = False
             self.display()
@@ -158,8 +169,9 @@ class Board():
         print(reset_colour)
         # create a list of items to be printed in a row showing guide numbers and the board
         for i in range(8):
-            row = [surround_colour + str(8 - i), "   "]
-            for square in self.board[i*8:i*8+8]:
+            board_i = i if self.player_white else -i + 7
+            row = [surround_colour + str(8 - board_i), "   "]
+            for square in self.board[board_i*8:board_i*8+8]:
                 if square:
                     if square.is_white:
                         row.append(str(square) + surround_colour)
@@ -169,7 +181,7 @@ class Board():
                 else:
                     row.append("\x1b[1;37;49mx " + surround_colour)
             row.append("  ")
-            row.append(str(8 - i))
+            row.append(str(8 - board_i))
             row.append("\x1b[0;36;49m")
             # print last 5 items in move history to the side of the board
             if i == 1:
