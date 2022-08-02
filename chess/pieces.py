@@ -41,6 +41,9 @@ class Board():
 
     def play(self) -> None:
         """Gets starting conditions from user and starts the game"""
+        self.display()
+        move = input("Enter a move: ")
+        
 
     def move(self):
         """Takes input from user and calls the corresponding methods in piece classes"""
@@ -131,8 +134,8 @@ class Board():
             # print last 5 items in move history to the side of the board
             if i == 1:
                 row.append("     History:")
-            elif 1 < i < 7 and i - 2 < len(self.move_history):
-                item = i + (len(self.move_history) - 7 if len(self.move_history.get_history(5)) > 5 else - 2)
+            elif 1 < i < 7 and i - 2 < len(self.move_history.get_history(5)):
+                item = i + (len(self.move_history.get_history(5)) - 7 if len(self.move_history.get_history(5)) > 5 else - 2)
                 row.append(f"     {str(item + 1)}. {str(self.move_history.get_history(5)[item])}")
             row.append(surround_colour)
             # join list into string and print
