@@ -490,8 +490,10 @@ class King(Piece):
             moves available and 'True' if none are available"""
 
 
+# TODO implement this
 class Timer():
     """Handles timing the game"""
+
     def __init__(self, start=None, finish=None) -> None:
         self.start_time = start
         self.finish_time = finish
@@ -513,6 +515,7 @@ class Timer():
             time: value to set timer to
         """
 
+# TODO implement this
 class MoveTracking():
     """Keeps track of moves made during the game"""
 
