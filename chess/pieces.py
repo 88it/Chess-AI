@@ -3,6 +3,7 @@ Holds all classes for chess pieces
 """
 
 import sys
+import re
 from colorama import init
 init()
 
@@ -46,12 +47,17 @@ class Board():
             input_valid = False
             self.display()
             while not input_valid:
-                move = input("Enter a move: ").split(" ")
+                move = input("Enter a move: ").strip()
+                # use regex to check input mathes the correct format
+                regex = re.search(r"([A-z][1-8]\s[A-z][1-8])", move)
+                if regex and regex.span()[1] == len(move):
+                    print("regex match")
                 try:
+                    move = move.split(" ")
                     move_from = self.square_to_id(move[0])
                     move_to = self.square_to_id(move[1])
                 except IndexError:
-                    print("IndexError caught")
+                    print("Invalid input, please try again")
                 else:
                     if self.board[move_from] and self.board[move_from].is_white == self.white_turn:
                         if self.board[move_from].validate_move(move[0]):
@@ -66,7 +72,8 @@ class Board():
                         else:
                             print("Invalid move, please try again")
                     else:
-                        print("invalid move, please try again")
+                        print("First square must contain a piece of your colour, "
+                        "please try again")
 
             self.white_turn = not self.white_turn
 
