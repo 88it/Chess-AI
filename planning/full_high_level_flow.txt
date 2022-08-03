@@ -1,0 +1,25 @@
+user imports chess and runs chess.play()
+
+in main.py play() instatiates:
+    Board
+    Pieces
+    Game
+    Player
+    FenUtil
+    Timer
+    Move_Gen
+    Precalculated bits
+
+Do first time setup:
+    Board.load_from_fen()
+    ...
+
+Game calls:
+    Game.start_config()
+    Timer.start()
+    main loop:
+        Board.display()
+        Move_gen.gen_moves()
+        input = Player.get_input()
+        Board.move(input) # input validated previously so none needed here
+        Game.update_stats() 
